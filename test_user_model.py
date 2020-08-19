@@ -123,12 +123,18 @@ class UserModelTestCase(TestCase):
 
             self.assertRaises(IntegrityError)
 
-    def test_authenticate_success(self):
-        """Does authenticate method work when passing in valid username and password?"""
-        u2 = User(email="test2@test.com", username="testuser2", password="HASHED_PASSWORD2")
+    def test_authenticate(self):
+        """Does authenticate method work as intended?"""
+        u2 = User.signup("testuser2", "test2@test.com", "HASHED_PASSWORD2", "https://static.toiimg.com/photo/msid-75390440/75390440.jpg?344550")
         db.session.add(u2)
         db.session.commit()
 
         test = User.authenticate("testuser2", "HASHED_PASSWORD2")
 
         self.assertEqual(test, u2)
+
+        try:
+            test2 = User.authenticate("testuser", "HASHED_PASSWORD2")
+            test3 = User.authenticate("testuser2", "HASHED_PASSWORD")
+        except ValueError:
+            self.assertRaises(ValueError)
