@@ -30,7 +30,7 @@ db.create_all()
 
 
 class UserModelTestCase(TestCase):
-    """Test views for messages."""
+    """Test user model."""
 
     def setUp(self):
         """Create test client, add sample data."""
@@ -48,14 +48,15 @@ class UserModelTestCase(TestCase):
         db.session.add(self.u)
         db.session.commit()
 
-        self.client = app.test_client()
-
     def tearDown(self):
         """Remove any fouled transactions"""
         db.session.rollback()
 
     def test_user_model(self):
         """Does basic model work?"""
+        self.assertEqual(self.u.email, "test@test.com")
+        self.assertEqual(self.u.username, "testuser")
+        self.assertEqual(self.u.password, "HASHED_PASSWORD")
 
         # User should have no messages & no followers
         self.assertEqual(len(self.u.messages), 0)
