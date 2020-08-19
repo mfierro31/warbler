@@ -48,8 +48,17 @@ class MessageViewTestCase(TestCase):
                                     email="test@test.com",
                                     password="testuser",
                                     image_url=None)
-
+        
         db.session.commit()
+
+        self.testuser_id = self.testuser.id
+
+        self.msg = Message(text="Testing!", user_id=self.testuser.id)
+
+        db.session.add(self.msg)
+        db.session.commit()
+
+        self.msg_id = self.msg.id
 
     def test_add_message(self):
         """Can use add a message?"""
@@ -69,5 +78,28 @@ class MessageViewTestCase(TestCase):
             # Make sure it redirects
             self.assertEqual(resp.status_code, 302)
 
-            msg = Message.query.one()
+            msg = Message.query.filter_by(text="Hello").one()
             self.assertEqual(msg.text, "Hello")
+
+    def test_show_message(self):
+        """Can we show a message?"""
+
+        with self.client.session_transaction() as sess:
+            sess[CURR_USER_KEY] = self.testuser_id
+        
+        resp = self.client.get(f"/messages/{self.msg_id}")
+        html = resp.get_data(as_text=True)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('Testing!', html)
+
+    def test_message_delete(self):
+        """Can we delete a message?"""
+        with self.client.session_transaction() as sess:
+            sess[CURR_USER_KEY] = self.testuser_id
+        
+        resp = self.client.post(f"/messages/{self.msg_id}/delete", follow_redirects=True)
+        html = resp.get_data(as_text=True)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn(f'<a href="/users/{self.testuser_id}">0</a>', html)
